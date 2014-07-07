@@ -91,7 +91,6 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Bundle-Activator>org.apache.sling.samples.test.Activator</Bundle-Activator>
 						<Sling-Initial-Content>initial-content</Sling-Initial-Content>
 					</instructions>
 				</configuration>

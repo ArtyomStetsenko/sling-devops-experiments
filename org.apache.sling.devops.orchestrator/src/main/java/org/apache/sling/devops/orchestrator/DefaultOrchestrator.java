@@ -60,9 +60,6 @@ public class DefaultOrchestrator implements Orchestrator {
 	@Property(label = "ZooKeeper connection string")
 	public static final String ZK_CONNECTION_STRING_PROP = "sling.devops.zookeeper.connString";
 
-	@Property(label = "Path to mod_proxy_balancer config file")
-	public static final String HTTPD_BALANCER_CONFIG_PATH_PROP = "sling.devops.httpd.balancer.config";
-
 	@Property(label = "Password for sudo command")
 	public static final String SUDO_PASSWORD_PROP = "sudo.password";
 
@@ -70,7 +67,6 @@ public class DefaultOrchestrator implements Orchestrator {
 
 	public static final int GIT_PERIOD_DEFAULT = 1;
 	public static final String GIT_PERIOD_UNIT_DEFAULT = "MINUTES";
-	public static final String HTTPD_PATH_DEFAULT = "apachectl";
 	public static final int N_DEFAULT = 2;
 
 	@Property(label = "Period for Git repository polling", intValue = GIT_PERIOD_DEFAULT)
@@ -79,14 +75,14 @@ public class DefaultOrchestrator implements Orchestrator {
 	@Property(label = "Period unit for Git repository polling", value = GIT_PERIOD_UNIT_DEFAULT)
 	public static final String GIT_PERIOD_UNIT_PROP = "sling.devops.git.period.unit";
 
-	@Property(label = "Path to the httpd executable", value = HTTPD_PATH_DEFAULT)
-	public static final String HTTPD_PATH_PROP = "sling.devops.httpd";
-
 	@Property(label = "N, the number of Minions running a config must be available before it is transitioned to", intValue = N_DEFAULT)
 	public static final String N_PROP = "sling.devops.orchestrator.n";
 
 	@Reference
 	private SlingSettingsService slingSettingsService;
+	
+	@Reference
+	private ConfigTransitioner configTransitioner;
 
 	private File devopsDirectory;
 	private int n;
@@ -94,7 +90,6 @@ public class DefaultOrchestrator implements Orchestrator {
 	private InstanceManager instanceManager;
 	private GitFileMonitor gitFileMonitor;
 	private MinionController minionController;
-	private ConfigTransitioner configTransitioner;
 	private String activeConfig = "";
 	private String targetConfig = "";
 	private ListAppender<ILoggingEvent> logAppender = new ListAppender<>();
@@ -115,13 +110,6 @@ public class DefaultOrchestrator implements Orchestrator {
 		final String crankstartJar = bundleContext.getProperty(CrankstartConstants.CRANKSTART_JAR_PATH);
 		if (crankstartJar != null) this.minionController = new CrankstartMinionController(crankstartJar);
 		else this.minionController = new ManualMinionController();
-
-		// Setup config transitioner
-		this.configTransitioner = new ModProxyConfigTransitioner(
-				PropertiesUtil.toString(properties.get(HTTPD_PATH_PROP), HTTPD_PATH_DEFAULT),
-				PropertiesUtil.toString(properties.get(HTTPD_BALANCER_CONFIG_PATH_PROP), null),
-				PropertiesUtil.toString(properties.get(SUDO_PASSWORD_PROP), null)
-				);
 
 		// Setup instance listener
 		this.instanceMonitor = new ZooKeeperInstanceMonitor(PropertiesUtil.toString(properties.get(ZK_CONNECTION_STRING_PROP), null));

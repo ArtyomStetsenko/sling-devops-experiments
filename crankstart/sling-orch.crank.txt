@@ -4,13 +4,17 @@
 
 # Set default values for our variables
 defaults port 1240
+defaults orchestrator.n 2
 defaults git_repo /Users/stetsenk/Desktop/testrepo
 defaults git_file sling-minion.crank.txt
 defaults git_period 5
 defaults git_period_unit SECONDS
 defaults zk_conn_string localhost:2181
-defaults httpd /opt/httpd-2.4.7/bin/apachectl
 defaults httpd_balancer_config /private/etc/apache2/mod_proxy_balancer.conf
+
+# TODO should be httpd -k ${command}
+# but crankstart has no way of saying "do not process this" 
+defaults httpd_command httpd -k graceful
 
 # Set bootstrap classpath, mvn: protocol can be used
 classpath mvn:org.apache.felix/org.apache.felix.framework/4.4.0
@@ -48,8 +52,11 @@ config org.apache.sling.devops.orchestrator.DefaultOrchestrator
 	sling.devops.git.period = ${git_period}
 	sling.devops.git.period.unit = ${git_period_unit}
 	sling.devops.zookeeper.connString = ${zk_conn_string}
-	sling.devops.httpd = ${httpd}
-	sling.devops.httpd.balancer.config = ${httpd_balancer_config}
+	sling.devops.orchestrator.n = ${orchestrator.n}
+	
+config org.apache.sling.devops.orchestrator.ModProxyConfigTransitioner
+    sling.devops.modproxy.httpd = ${httpd_command}
+    sling.devops.httpd.balancer.config = ${httpd_balancer_config}
 
 # Install bundles
 # mvn: protocol can be used.

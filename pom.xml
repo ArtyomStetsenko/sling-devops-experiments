@@ -17,6 +17,7 @@
 		<module>org.apache.sling.devops.common</module>
 		<module>org.apache.sling.devops.minion</module>
 		<module>org.apache.sling.devops.orchestrator</module>
+		<module>tools</module>
 	</modules>
 
 	<!--

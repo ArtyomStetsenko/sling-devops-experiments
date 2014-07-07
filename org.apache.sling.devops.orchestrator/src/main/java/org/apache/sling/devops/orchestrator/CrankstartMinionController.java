@@ -12,6 +12,8 @@ import java.util.Random;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecuteResultHandler;
 import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteException;
+import org.apache.commons.exec.ExecuteResultHandler;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.Executor;
 import org.apache.commons.exec.LogOutputStream;
@@ -79,8 +81,32 @@ public class CrankstartMinionController implements MinionController {
 							logger.debug(line);
 						}
 					}));
-			logger.info("Starting a Minion with config={} on port {}...", config, port);
-			executor.execute(commandLine, new DefaultExecuteResultHandler());
+			logger.info("Starting a Minion with config={} on port {}", config, port);
+			
+			final ExecuteResultHandler eh = new DefaultExecuteResultHandler() {
+			    
+			    private String errorInfo() {
+			        return "config=" + config + ", command line=" + commandLine + ", debug log might provide more info";
+			    }
+			    
+                @Override
+                public void onProcessComplete(int exitValue) {
+                    super.onProcessComplete(exitValue);
+                    if(exitValue == 0) {
+                        logger.info("Minion process for config {} exited without errors", config);
+                    } else {
+                        logger.warn("Minion process execution failed (exit code={}), {}", exitValue, errorInfo());
+                    }
+                }
+
+                @Override
+                public void onProcessFailed(ExecuteException e) {
+                    super.onProcessFailed(e);
+                    logger.warn("Minion process execution failed, " + errorInfo(), e);
+                }
+			    
+			};
+			executor.execute(commandLine, eh);
 
 			if (!this.configInstances.containsKey(config)) {
 				this.configInstances.put(config, new LinkedList<Executor>());
